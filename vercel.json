@@ -6,11 +6,5 @@
     "routes": [
       { "src": "/api/(.*)", "dest": "src/index.js" }
     ],
-    "installCommand": "npm install",
-    "functions": {
-      "src/index.js": {
-        "memory": 1024,
-        "maxDuration": 10
-      }
-    }
-  }
+    "installCommand": "npm install"
+}
