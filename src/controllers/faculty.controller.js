@@ -36,17 +36,16 @@ const registerFaculty = async (req, res) => {
       return res.status(409).json({ success: false, message: "Faculty with email or username already exists" });
     }
 
-    // Handle avatar upload (optional)
-    let avatarUrl = null;
-    if (req.file) {
-      console.log("Avatar file:", req.file);
-      // For Vercel, we need to handle the buffer instead of path
-      const avatarUpload = await uploadOnCloudinary(req.file.buffer, req.file.originalname);
-      if (avatarUpload?.url) {
-        avatarUrl = avatarUpload.url;
-      } else {
-        console.warn("Failed to upload avatar, proceeding without it");
-      }
+    // Ensure req.file is available and log it
+    console.log("Avatar file:", req.file);
+    const avatarLocalPath = req.file?.path;  // Adjust based on how multer or express-fileupload works
+    if (!avatarLocalPath) {
+      return res.status(400).json({ success: false, message: "Avatar file is required" });
+    }
+
+    const avatarUpload = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatarUpload?.url) {
+      return res.status(500).json({ success: false, message: "Failed to upload avatar" });
     }
 
     const faculty = await Faculty.create({
@@ -55,7 +54,7 @@ const registerFaculty = async (req, res) => {
       username,
       password,
       collegeName,
-      avatar: avatarUrl // Will be null if no avatar provided
+      avatar: avatarUpload.url
     });
 
     if (!faculty) {

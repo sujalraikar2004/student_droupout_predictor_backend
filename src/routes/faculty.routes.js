@@ -8,7 +8,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router()
 
 router.route("/register").post(
-    upload.single('avatar'), // Avatar is optional now
+    upload.single('avatar'),
     registerFaculty
     )
 
