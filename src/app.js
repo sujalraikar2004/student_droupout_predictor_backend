@@ -9,10 +9,13 @@ const app = express();
 
 
 app.use(cors({
-  origin: '*', 
-  methods: ['GET', 'POST'],
+  origin: [
+    'http://localhost:5173',
+    'https://student-droupout-predictor.vercel.app'
+  ], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
 }));
-
 
 app.use(express.json({limit: "16kb"}))
 app.use(express.urlencoded({extended: true, limit: "16kb"}))
