@@ -1,7 +1,8 @@
 import path from "path";
 import fs from "fs";
 import csv from "csv-parser";
-import { Student } from "../models/studen.model.js";
+import { Readable } from "stream";
+import { Student } from "../models/studen.model.js";// Make sure the path to student model is correct
 import runDropoutPrediction from "./predictor.controller.js";// Make sure the path to student model is correct
 
 // Register student based on uploaded CSV file
@@ -12,13 +13,18 @@ const registerStudent = async (req, res) => {
       return res.status(400).send('No file uploaded.');
     }
 
-    // Log the uploaded file path (for debugging purposes)
-    console.log(`File received: ${req.file.path}`);
+    // Log the uploaded file info (for debugging purposes)
+    console.log(`File received: ${req.file.originalname}, Size: ${req.file.size} bytes`);
 
     const results = [];
 
-    // Read and parse the uploaded CSV file
-    fs.createReadStream(req.file.path)
+    // Create a readable stream from the buffer for Vercel compatibility
+    const bufferStream = new Readable();
+    bufferStream.push(req.file.buffer);
+    bufferStream.push(null);
+
+    // Read and parse the uploaded CSV file from memory buffer
+    bufferStream
       .pipe(csv())
       .on('data', (data) => {
         // Extract student data from the CSV row
@@ -68,12 +74,16 @@ const registerStudent = async (req, res) => {
           // Insert the parsed student data into the MongoDB database
           await Student.insertMany(results);
           console.log('Students inserted into MongoDB');
-         await runDropoutPrediction();
+          await runDropoutPrediction();
           res.status(200).send('Students data successfully registered!');
         } catch (err) {
           console.error('Error inserting students into MongoDB', err);
           res.status(500).send('Error registering students.');
         }
+      })
+      .on('error', (err) => {
+        console.error('Error parsing CSV:', err);
+        res.status(500).send('Error parsing CSV file.');
       });
   } catch (err) {
     console.error('Error processing file:', err);
